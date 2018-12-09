@@ -1,0 +1,5 @@
+
+// Git stuff
+git add -A
+git commit -m ”skriv en kommentar”
+git push
