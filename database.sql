@@ -18,5 +18,6 @@ CREATE TABLE properties (
        type VARCHAR,
        value INTEGER,
 
+       PRIMARY KEY (parent, type),
        FOREIGN KEY (parent) REFERENCES blackboard
 );
