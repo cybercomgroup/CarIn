@@ -8,8 +8,8 @@ CREATE TABLE blackboard (
        typeid VARCHAR,
        latitude FLOAT,
        longitude FLOAT,
-       locationconfidence INTEGER,
-       validityduration float,
+       locationconfidence FLOAT,
+       validityduration FLOAT,
        validityarea INTEGER --Currently unused--
 );
 
