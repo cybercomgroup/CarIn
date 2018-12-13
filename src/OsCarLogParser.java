@@ -4,15 +4,19 @@ import java.io.BufferedReader;
 import java.lang.StringBuilder;
 import java.util.HashMap;
 import java.sql.*; // JDBC stuff.
+import java.util.Properties;
 
 
 public class OsCarLogParser
 {
+    static final String USERNAME ="";
+    static final String PASSWORD ="xxxx";
+
     public static void main(String[] args) throws Exception
     {
-	FileInputStream fs;
-	InputStreamReader fr;
-	BufferedReader file;
+	FileInputStream fs = null;
+	InputStreamReader fr = null;
+	BufferedReader file = null;
 	//If filename is entered, use it. Else, print error
 	if ( args.length <= 0 )
 	    {
@@ -63,6 +67,7 @@ public class OsCarLogParser
     private static void parse(BufferedReader logfile)
     {
 	//Do the database thing
+	Connection conn = null;
 	try
 	    {
 		Class.forName("org.postgresql.Driver");
@@ -70,13 +75,18 @@ public class OsCarLogParser
 		Properties props = new Properties();
 		props.setProperty("user",USERNAME);
 		props.setProperty("password",PASSWORD);
-		Connection conn = DriverManager.getConnection(url, props);
+		conn = DriverManager.getConnection(url, props);
 	    }
 	catch( Exception e )
 	    {
 		System.out.println("Error occured connecting to database. Have you set the right connection settings in the source-code? Do you have network access to the database?");
 		e.printStackTrace();
 		System.exit(1);
+	    }
+
+	if (conn == null)
+	    {
+		error();
 	    }
 	
 	//Read the file line by line
@@ -91,32 +101,32 @@ public class OsCarLogParser
 		    //Loop through the line setting the data into a buffer.
 		    //Every data string into its own place in the hash-map.
 		    //Properties are placed in a separate hash-map, so that the varying names of the columns can be handled.
-		    HashMap blackboard = new HashMap();
-		    HashMap property = new HashMap();
-		    HashMap map = blackboard;
+		    HashMap<String,String> blackboard = new HashMap<String,String>();
+		    HashMap<String,String> property = new HashMap<String,String>();
+		    HashMap<String,String> map = blackboard;
 		    StringBuilder buffer = new StringBuilder();
-		    String key;
+		    String key = new String();
 		    int blackboardKey = 0;
-		    bool inProperties = false;
-		    for ( int i = 1; line.length > i; i++ )
+		    Boolean inProperties = false;
+		    for ( int i = 1; line.length() > i; i++ )
 			{
-			    switch (line.getChar(i))
+			    switch (line.charAt(i))
 				{
-				case " ":
+				case ' ':
 				    //Blank spaces have no meaning in the log, thus they are ignored
 				case '"':
 				    //End or start of quote are extraneous, since other symbols declare the start and end of strings
-				case ":":
+				case ':':
 				    //The column name for the data is in the buffer. Save it to key.
 				    key = buffer.toString();
 				    //Clear the buffer to make space for the data.
 				    buffer = new StringBuilder();
-				case ",":
+				case ',':
 				    //Denominates the end of a key-value pair. Save the data into map.
 				    map.put(key, buffer.toString());
 				    //And clear the buffer
 				    buffer = new StringBuilder();
-				case "{":
+				case '{':
 				    //This is a underlying data pair. These are either split and saved with the rest or put into a separate map
 				    if (key == "location" )
 					{
@@ -126,7 +136,7 @@ public class OsCarLogParser
 				    else if ( inProperties )
 					{
 					    //These are properties. They are to be put into the properties map, which must be cleared.
-					    property = new HashMap();
+					    property = new HashMap<String,String>();
 					    map = property;
 					    //As above the key will be overwritten and data entered normally
 					}
@@ -135,14 +145,14 @@ public class OsCarLogParser
 					    //This should never happen!
 					    error();
 					}
-				case "}":
+				case '}':
 				    //If this is in properties, commit the map to the database
 				    //Else, ignore it
 				    if ( inProperties )
 					{
 					    //Initiate query
 					    PreparedStatement query = conn.prepareStatement("INSERT INTO properties VALUES( ?, ?)");
-					    for( Map.Entry tmp : map.entrySet() )
+					    for( HashMap.Entry<String, String> tmp : map.entrySet() )
 						{
 						    if (tmp.getKey() == "type")
 							{
@@ -158,7 +168,7 @@ public class OsCarLogParser
 					    //execute query
 					    query.executeQuery();
 					}
-				case "[":
+				case '[':
 				    //Start of the underlying properties, just make sure.
 				    if (key == "blackboardProperties" )
 					{
@@ -167,30 +177,30 @@ public class OsCarLogParser
 					    //Initiate query
 					    PreparedStatement query = conn.prepareStatement("INSERT INTO blackboards VALUES( ?, ?, ?, ?, ?, ?, ?)");
 					    //Set the key
-					    query.setString(1, blackboardKey++);
+					    query.setInt(1, blackboardKey++);
 					    //Insert all the data
-					    for( Map.Entry tmp : map.entrySet() )
+					    for( HashMap.Entry<String, String> tmp : map.entrySet() )
 						{
-						    switch (tmp.getKey)
+						    switch (tmp.getKey())
 							{
 							case "itemId":
-							    query.setInteger(2, Integer.parseInt(tmp.getValue()));
+							    query.setInt(2, Integer.parseInt(tmp.getValue()));
 							case "stationId":
-							    query.setInteger(3, Integer.parseInt(tmp.getValue()));
+							    query.setInt(3, Integer.parseInt(tmp.getValue()));
 							case "appId":
-							    query.setInteger(4, Integer.parseInt(tmp.getValue()));
+							    query.setInt(4, Integer.parseInt(tmp.getValue()));
 							case "typeId":
 							    query.setString(5, tmp.getValue());
 							case "latitude":
-							    query.setInteger(6, Integer.parseInt(tmp.getValue()));
+							    query.setInt(6, Integer.parseInt(tmp.getValue()));
 							case "longitude":
-							    query.setInteger(7, Integer.parseInt(tmp.getValue()));
+							    query.setInt(7, Integer.parseInt(tmp.getValue()));
 							case "locationConfidence":
-							    query.setInteger(8, Integer.parseInt(tmp.getValue()));
+							    query.setInt(8, Integer.parseInt(tmp.getValue()));
 							case "validityDuration":
-							    query.setInteger(2, Integer.parseInt(tmp.getValue()));
+							    query.setInt(9, Integer.parseInt(tmp.getValue()));
 							case "validityArea":
-							    query.setInteger(2, tmp.getValue());
+							    query.setInt(10, Integer.parseInt(tmp.getValue()));
 							}
 						}
 					    //execute query
@@ -203,10 +213,14 @@ public class OsCarLogParser
 					    //This should never happen!
 					    error();
 					}
-				case "]":
+				case ']':
 				    //It should all be done by now, so ignore
+				default:
+				    buffer.append(line.charAt(i));
+					    
 				}
 			}
+		}
 	    }
 	catch(Exception e)
 	    {
