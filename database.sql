@@ -13,25 +13,7 @@ CREATE TABLE blackboard (
        validityarea INTEGER --Currently unused--
 );
 
-CREATE TABLE intproperties (
-       parent INTEGER,
-       type VARCHAR,
-       value INTEGER,
-
-       PRIMARY KEY (parent, type),
-       FOREIGN KEY (parent) REFERENCES blackboard
-);
-
-CREATE TABLE boolproperties (
-       parent INTEGER,
-       type VARCHAR,
-       value BOOL,
-
-       PRIMARY KEY (parent, type),
-       FOREIGN KEY (parent) REFERENCES blackboard
-);
-
-CREATE TABLE stringproperties (
+CREATE TABLE properties (
        parent INTEGER,
        type VARCHAR,
        value VARCHAR,
