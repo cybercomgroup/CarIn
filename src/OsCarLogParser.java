@@ -74,7 +74,7 @@ public class OsCarLogParser
 	try
 	    {
 		Class.forName("org.postgresql.Driver");
-		String url = "jdbc:postgresql://sidju.se/";
+		String url = "jdbc:postgresql://localhost/";
 		Properties props = new Properties();
 		props.setProperty("user",USERNAME);
 		props.setProperty("password",PASSWORD);

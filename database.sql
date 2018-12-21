@@ -2,7 +2,7 @@ drop owned by v2x;
 
 CREATE TABLE blackboard (
        key SERIAL PRIMARY KEY,
-       itemid INTEGER,
+       itemid VARCHAR,
        stationid INTEGER,
        appid INTEGER,
        typeid VARCHAR,
