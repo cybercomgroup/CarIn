@@ -9,9 +9,11 @@ import java.util.Properties;
 
 public class OsCarLogParser
 {
-    static String USERNAME ="";
-    static String PASSWORD ="xxxx";
+    static String USERNAME = "";
+    static String PASSWORD = "";
 
+    //Reads input from command line and opens the local logfile to be parsed.
+    //Hands over to parse() while keeping track of used resources and closes when parse() is done.
     public static void main(String[] args) throws Exception
     {
 	FileInputStream fs = null;
@@ -61,18 +63,21 @@ public class OsCarLogParser
 	    }
     }
 
+    //An error macro for parse errors
     private static void error()
     {
 	System.out.println("Unknown log format!");
 	System.exit(1);
     }
-    
+
+    //The method that does the rest, could be split into database and parse.
     private static void parse(BufferedReader logfile)
     {
 	//Do the database thing
 	Connection conn = null;
 	try
 	    {
+		//Note that this will fail if the driver jar isn't in the classpath
 		Class.forName("org.postgresql.Driver");
 		String url = "jdbc:postgresql://localhost/";
 		Properties props = new Properties();
@@ -94,7 +99,7 @@ public class OsCarLogParser
 
 	System.out.println("Database connected");
 	
-	//Read the file line by line
+	//Read the file line by line, parsing each line
 	try
 	    {
 		HashMap<String,String> blackboard = new HashMap<String,String>();
